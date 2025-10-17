@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Build a CRUD Web App in Visual Studio</title>
+    <style>
+      /* --- General Styles & Fonts --- */
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
+
+      :root {
+        --primary-color: #0078d4;
+        --secondary-color: #2b2b2b;
+        --background-color: #f4f4f9;
+        --card-bg-color: #ffffff;
+        --text-color: #333;
+        --light-gray: #e9ecef;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --border-radius: 8px;
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      /* --- Header --- */
+      .header {
+        text-align: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, var(--primary-color), #005a9e);
+        color: white;
+        border-radius: var(--border-radius);
+        margin-bottom: 30px;
+        box-shadow: var(--shadow);
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2.8rem;
+        font-weight: 700;
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-top: 10px;
+      }
+
+      /* --- Section Styling --- */
+      .section {
+        background-color: var(--card-bg-color);
+        padding: 30px;
+        margin-bottom: 30px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+      }
+
+      .section-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--light-gray);
+      }
+
+      /* --- CRUD Flow Summary --- */
+      .flow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        text-align: center;
+      }
+
+      .flow-card {
+        background-color: var(--background-color);
+        padding: 20px;
+        border-radius: var(--border-radius);
+        border-left: 5px solid;
+      }
+
+      .flow-card h3 {
+        margin-top: 0;
+        font-size: 1.5rem;
+      }
+
+      .flow-card.create {
+        border-color: var(--success-color);
+      }
+      .flow-card.read {
+        border-color: #17a2b8;
+      }
+      .flow-card.update {
+        border-color: #ffc107;
+      }
+      .flow-card.delete {
+        border-color: var(--danger-color);
+      }
+
+      /* --- Step-by-Step Guide --- */
+      .step-list {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .step-item {
+        background-color: #f8f9fa;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        margin-bottom: 15px;
+        overflow: hidden;
+      }
+
+      .step-header {
+        padding: 15px 20px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #fff;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .step-header::after {
+        content: "▼";
+        transition: transform 0.3s;
+      }
+
+      .step-content {
+        padding: 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+      }
+
+      .step-item.active .step-header::after {
+        transform: rotate(180deg);
+      }
+
+      .step-item.active .step-content {
+        padding: 20px;
+      }
+
+      .step-content p,
+      .step-content ul {
+        margin: 0;
+      }
+      .step-content ul {
+        padding-left: 20px;
+      }
+      .step-content code {
+        background-color: var(--light-gray);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: "Courier New", Courier, monospace;
+      }
+
+      /* --- Code Tabs --- */
+      .code-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        border-bottom: 2px solid var(--light-gray);
+        margin-bottom: 15px;
+      }
+
+      .tab-button {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        background-color: transparent;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6c757d;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+      }
+
+      .tab-button.active {
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* --- Syntax Highlighting --- */
+      pre {
+        background-color: var(--secondary-color);
+        color: #f8f8f2;
+        padding: 20px;
+        border-radius: var(--border-radius);
+        overflow-x: auto;
+        position: relative;
+      }
+
+      .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #444;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      pre:hover .copy-btn {
+        opacity: 1;
+      }
+
+      /* --- Tips Section --- */
+      .tips {
+        background-color: #e2f3ff;
+        border-left: 5px solid var(--primary-color);
+        padding: 20px;
+        border-radius: var(--border-radius);
+      }
+      .tips h3 {
+        margin-top: 0;
+      }
+      .tips ul {
+        padding-left: 20px;
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Build Your First CRUD Web App 🚀</h1>
+        <p>
+          A beginner-friendly guide to creating a .NET Core MVC application with
+          C#
+        </p>
+      </header>
+
+      <section class="section">
+        <h2 class="section-title">The Big Picture: What is CRUD?</h2>
+        <p>
+          CRUD stands for <strong>Create</strong>, <strong>Read</strong>,
+          <strong>Update</strong>, and <strong>Delete</strong>. These are the
+          four basic functions you need to manage data in any application.
+          Here’s how it works in our project:
+        </p>
+        <div class="flow-grid">
+          <div class="flow-card create">
+            <h3>✅ Create</h3>
+            <p>
+              Click "Add", fill out a form, save it to the database, and you're
+              redirected to the main list.
+            </p>
+          </div>
+          <div class="flow-card read">
+            <h3>📖 Read</h3>
+            <p>
+              The main page reads all items from the database and displays them
+              in a neat table for you to see.
+            </p>
+          </div>
+          <div class="flow-card update">
+            <h3>✏️ Update</h3>
+            <p>
+              Click "Edit", change the values in the form, save your changes,
+              and you're sent back to the list.
+            </p>
+          </div>
+          <div class="flow-card delete">
+            <h3>❌ Delete</h3>
+            <p>
+              Click "Delete", confirm your choice, and the item is removed from
+              the database forever.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Step-by-Step Guide</h2>
+        <ul class="step-list" id="step-accordion">
+          <li class="step-item">
+            <div class="step-header">1️⃣ Open Visual Studio</div>
+            <div class="step-content">
+              <p>
+                Double-click the Visual Studio icon, wait for it to open, and
+                then click <strong>Create a new project</strong>.
+              </p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">2️⃣ Choose Project Type</div>
+            <div class="step-content">
+              <p>
+                In the search box, type
+                <code>ASP.NET Core Web App (Model-View-Controller)</code>,
+                select it, and click <strong>Next</strong>.
+              </p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">3️⃣ Name Your Project</div>
+            <div class="step-content">
+              <p>
+                Give your project a name like <code>MyInventoryApp</code> and
+                choose where to save it. Then click <strong>Next</strong>.
+              </p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">4️⃣ Configure Project</div>
+            <div class="step-content">
+              <ul>
+                <li>
+                  <strong>.NET Version:</strong> Select the latest stable
+                  version (.NET 7 or .NET 8).
+                </li>
+                <li>
+                  <strong>Authentication:</strong> Keep it as "No
+                  Authentication" for now.
+                </li>
+                <li>
+                  <strong>Optional:</strong> Check "Enable Razor runtime
+                  compilation".
+                </li>
+              </ul>
+              <p>Finally, click <strong>Create</strong>.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">5️⃣ Understand Project Structure</div>
+            <div class="step-content">
+              <p>Your project has a few key folders:</p>
+              <ul>
+                <li>
+                  <code>Controllers</code>: The "brain" of your app (C# logic).
+                </li>
+                <li>
+                  <code>Models</code>: Defines the "shape" of your data (C#
+                  classes).
+                </li>
+                <li><code>Views</code>: The user interface (HTML pages).</li>
+                <li>
+                  <code>wwwroot</code>: For static files like CSS and
+                  JavaScript.
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">6️⃣ Add a Model (Inventory.cs)</div>
+            <div class="step-content">
+              <p>This class defines what an inventory item looks like.</p>
+              <ul>
+                <li>
+                  Right-click the <strong>Models</strong> folder →
+                  <strong>Add</strong> → <strong>Class</strong>.
+                </li>
+                <li>Name it <code>Inventory.cs</code>.</li>
+                <li>
+                  Paste the code from the
+                  <strong>Inventory.cs (Model)</strong> tab below.
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              7️⃣ Add the Controller (HomeController.cs)
+            </div>
+            <div class="step-content">
+              <p>This handles user requests and tells the app what to do.</p>
+              <ul>
+                <li>
+                  Right-click the <strong>Controllers</strong> folder →
+                  <strong>Add</strong> → <strong>Controller</strong> →
+                  <strong>MVC Controller – Empty</strong>.
+                </li>
+                <li>Name it <code>HomeController.cs</code>.</li>
+                <li>
+                  Paste the code from the <strong>HomeController.cs</strong> tab
+                  below.
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">8️⃣ Add the Views</div>
+            <div class="step-content">
+              <p>These are the pages the user sees.</p>
+              <ul>
+                <li>
+                  Right-click the <strong>Views/Home</strong> folder →
+                  <strong>Add</strong> → <strong>View</strong>.
+                </li>
+                <li>
+                  Create 4 views: <code>Index.cshtml</code>,
+                  <code>Create.cshtml</code>, <code>Update.cshtml</code>, and
+                  <code>Delete.cshtml</code>.
+                </li>
+                <li>
+                  Paste the Razor code from the tabs below into each
+                  corresponding file.
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">9️⃣ Setup Database Connection</div>
+            <div class="step-content">
+              <p>Tell your app how to find your database.</p>
+              <ul>
+                <li>Open the <code>appsettings.json</code> file.</li>
+                <li>
+                  Paste the connection string from the
+                  <strong>appsettings.json</strong> tab below.
+                </li>
+                <li>
+                  Make sure to replace <code>LAPTOP-IST1GJ5D</code> with your
+                  actual computer/server name.
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-header">🔟 Run the Project!</div>
+            <div class="step-content">
+              <p>
+                Press <strong>F5</strong> or click the green "Run" button. Your
+                web browser will open, and you can now Add, Edit, Delete, and
+                View your inventory items!
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Database Setup 💾</h2>
+        <p>
+          Before running the app, you need to create the database and table in
+          SQL Server.
+        </p>
+        <ol>
+          <li>Open SQL Server Management Studio (SSMS).</li>
+          <li>
+            In the Object Explorer, right-click on
+            <strong>Databases</strong> and select <strong>New Database</strong>.
+          </li>
+          <li>Enter the database name: <code>Company</code> and click OK.</li>
+          <li>
+            Select the new <code>Company</code> database, click
+            <strong>New Query</strong>, and run the script below to create the
+            `Inventory` table.
+          </li>
+        </ol>
+        <pre><code class="language-sql">
+CREATE TABLE [dbo].[Inventory]
+(
+    [Id] INT NOT NULL IDENTITY(1,1) PRIMARY KEY, 
+    [Name] VARCHAR(50) NOT NULL, 
+    [Price] MONEY NOT NULL, 
+    [Quantity] INT NOT NULL, 
+    [AddedOn] DATE NOT NULL DEFAULT GETDATE()
+)
+</code></pre>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Code Breakdown 💻</h2>
+        <div class="code-tabs">
+          <button
+            class="tab-button active"
+            onclick="openTab(event, 'Controller')"
+          >
+            HomeController.cs
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'Model')">
+            Inventory.cs (Model)
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'AppSettings')">
+            appsettings.json
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'Index')">
+            Index.cshtml (View)
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'Create')">
+            Create.cshtml (View)
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'Update')">
+            Update.cshtml (View)
+          </button>
+          <button class="tab-button" onclick="openTab(event, 'Delete')">
+            Delete.cshtml (View)
+          </button>
+        </div>
+
+        <div id="Controller" class="tab-content active">
+          <pre><code class="language-csharp">
+using Microsoft.AspNetCore.Mvc;
+using MyADO.Models;
+using System.Data.SqlClient;
+
+namespace MyADO.Controllers
+{
+    public class HomeController : Controller
+    {
+        public IConfiguration Configuration { get; }
+
+        public HomeController(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        // READ: Display all inventory items
+        public IActionResult Index()
+        {
+            List&lt;Inventory&gt; inventoryList = new List&lt;Inventory&gt;();
+            string connectionString = Configuration["ConnectionStrings:DefaultConnection"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT * FROM Inventory";
+                SqlCommand command = new SqlCommand(sql, connection);
+                using (SqlDataReader dataReader = command.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        Inventory inventory = new Inventory();
+                        inventory.Id = Convert.ToInt32(dataReader["Id"]);
+                        inventory.Name = Convert.ToString(dataReader["Name"]);
+                        inventory.Price = Convert.ToDecimal(dataReader["Price"]);
+                        inventory.Quantity = Convert.ToInt32(dataReader["Quantity"]);
+                        inventory.AddedOn = Convert.ToDateTime(dataReader["AddedOn"]);
+                        inventoryList.Add(inventory);
+                    }
+                }
+            }
+            return View(inventoryList);
+        }
+
+        // CREATE: Show form (GET)
+        [HttpGet]
+        public IActionResult Create() => View();
+
+        // CREATE: Save new record (POST)
+        [HttpPost]
+        public IActionResult Create(Inventory model)
+        {
+            string connectionString = Configuration["ConnectionStrings:DefaultConnection"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = "INSERT INTO Inventory (Name, Price, Quantity, AddedOn) VALUES (@Name, @Price, @Quantity, @AddedOn)";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@Name", model.Name);
+                    command.Parameters.AddWithValue("@Price", model.Price);
+                    command.Parameters.AddWithValue("@Quantity", model.Quantity);
+                    command.Parameters.AddWithValue("@AddedOn", DateTime.Now);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+            return RedirectToAction("Index");
+        }
+        
+        // Other methods (Update, Delete) follow a similar pattern...
+    }
+}
+</code></pre>
+        </div>
+
+        <div id="Model" class="tab-content">
+          <pre><code class="language-csharp">
+namespace MyADO.Models
+{
+    public class Inventory
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public DateTime AddedOn { get; set; }
+    }
+}
+</code></pre>
+        </div>
+
+        <div id="AppSettings" class="tab-content">
+          <pre><code class="language-json">
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=LAPTOP-IST1GJ5D\\SQLEXPRESS;Database=Company;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
+</code></pre>
+        </div>
+
+        <div id="Index" class="tab-content">
+          <pre><code class="language-html">
+@model IEnumerable&lt;Inventory&gt;
+@{ ViewData["Title"] = "Inventory List"; }
+
+&lt;h1&gt;Inventory &lt;a asp-action="Create" class="btn btn-sm btn-primary"&gt;+ Add New&lt;/a&gt;&lt;/h1&gt;
+
+&lt;table class="table table-bordered table-striped"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Id&lt;/th&gt;
+            &lt;th&gt;Name&lt;/th&gt;
+            &lt;th&gt;Price&lt;/th&gt;
+            &lt;th&gt;Quantity&lt;/th&gt;
+            &lt;th&gt;Added On&lt;/th&gt;
+            &lt;th&gt;Actions&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        @foreach (var p in Model)
+        {
+            &lt;tr&gt;
+                &lt;td&gt;@p.Id&lt;/td&gt;
+                &lt;td&gt;@p.Name&lt;/td&gt;
+                &lt;td&gt;@string.Format(new System.Globalization.CultureInfo("en-IN"), "{0:C}", p.Price)&lt;/td&gt;
+                &lt;td&gt;@p.Quantity&lt;/td&gt;
+                &lt;td&gt;@p.AddedOn.ToShortDateString()&lt;/td&gt;
+                &lt;td&gt;
+                    &lt;a asp-action="Update" asp-route-id="@p.Id" class="btn btn-sm btn-warning"&gt;Edit&lt;/a&gt;
+                    &lt;a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger"&gt;Delete&lt;/a&gt;
+                &lt;/td&gt;
+            &lt;/tr&gt;
+        }
+    &lt;/tbody&gt;
+&lt;/table&gt;
+</code></pre>
+        </div>
+
+        <div id="Create" class="tab-content">
+          <pre><code class="language-html">
+@model Inventory
+@{ ViewData["Title"] = "Add New Item"; }
+
+&lt;h2&gt;Add New Inventory Item&lt;/h2&gt;
+
+&lt;form asp-action="Create" method="post"&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Name"&gt;&lt;/label&gt;
+        &lt;input asp-for="Name" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Price"&gt;&lt;/label&gt;
+        &lt;input asp-for="Price" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Quantity"&gt;&lt;/label&gt;
+        &lt;input asp-for="Quantity" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn btn-success"&gt;➕ Add Item&lt;/button&gt;
+    &lt;a asp-action="Index" class="btn btn-secondary"&gt;⬅ Back&lt;/a&gt;
+&lt;/form&gt;
+</code></pre>
+        </div>
+
+        <div id="Update" class="tab-content">
+          <pre><code class="language-html">
+@model Inventory
+@{ ViewData["Title"] = "Update Item"; }
+
+&lt;h2&gt;Update Inventory Item&lt;/h2&gt;
+
+&lt;form asp-action="Update" method="post"&gt;
+    &lt;input type="hidden" asp-for="Id" /&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Name"&gt;&lt;/label&gt;
+        &lt;input asp-for="Name" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Price"&gt;&lt;/label&gt;
+        &lt;input asp-for="Price" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group mb-3"&gt;
+        &lt;label asp-for="Quantity"&gt;&lt;/label&gt;
+        &lt;input asp-for="Quantity" class="form-control" /&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn btn-primary"&gt;💾 Save Changes&lt;/button&gt;
+    &lt;a asp-action="Index" class="btn btn-secondary"&gt;⬅ Back&lt;/a&gt;
+&lt;/form&gt;
+</code></pre>
+        </div>
+
+        <div id="Delete" class="tab-content">
+          <pre><code class="language-html">
+@model Inventory
+@{ ViewData["Title"] = "Delete Item"; }
+
+&lt;h2 class="text-danger"&gt;Delete Inventory Item&lt;/h2&gt;
+&lt;h3&gt;Are you sure you want to delete this?&lt;/h3&gt;
+
+&lt;div&gt;
+    &lt;dl class="row"&gt;
+        &lt;dt class="col-sm-2"&gt;Name&lt;/dt&gt;
+        &lt;dd class="col-sm-10"&gt;@Model.Name&lt;/dd&gt;
+    &lt;/dl&gt;
+    
+    &lt;form asp-action="DeleteConfirmed" method="post"&gt;
+        &lt;input type="hidden" asp-for="Id" /&gt;
+        &lt;button type="submit" class="btn btn-danger"&gt;🗑️ Confirm Delete&lt;/button&gt;
+        &lt;a asp-action="Index" class="btn btn-secondary"&gt;⬅ Cancel&lt;/a&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+</code></pre>
+        </div>
+      </section>
+
+      <section class="section tips">
+        <h3>💡 Extra Tips for Beginners</h3>
+        <ul>
+          <li>
+            <strong>Connection String is Key:</strong> The app will not work if
+            the `Server` name in `appsettings.json` doesn't match your
+            computer's SQL Server name exactly.
+          </li>
+          <li>
+            <strong>Always Save:</strong> Remember to save your files (Ctrl + S)
+            before you run the project to see your latest changes!
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <script>
+      function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+
+      document
+        .getElementById("step-accordion")
+        .addEventListener("click", function (e) {
+          const header = e.target.closest(".step-header");
+          if (!header) return;
+          const item = header.parentElement;
+          const content = header.nextElementSibling;
+          item.classList.toggle("active");
+          if (item.classList.contains("active")) {
+            content.style.maxHeight = content.scrollHeight + "px";
+          } else {
+            content.style.maxHeight = 0;
+          }
+        });
+
+      document.querySelectorAll("pre").forEach((pre) => {
+        const button = document.createElement("button");
+        button.className = "copy-btn";
+        button.innerText = "Copy";
+        pre.appendChild(button);
+        button.addEventListener("click", () => {
+          const code = pre.querySelector("code").innerText;
+          navigator.clipboard.writeText(code).then(() => {
+            button.innerText = "Copied!";
+            setTimeout(() => {
+              button.innerText = "Copy";
+            }, 2000);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
